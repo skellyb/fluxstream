@@ -1,0 +1,22 @@
+{
+  "name": "fluxstream",
+  "version": "1.0.0",
+  "description": "A lightweight Flux implementation that controls data flow around your app using Bacon.js EventStreams.",
+  "author": "Shawn Kelly",
+  "main": "index.js",
+  "dependencies": {
+    "baconjs": "^0.7.30"
+  },
+  "keywords": [
+    "Flux",
+    "React",
+    "React.js",
+    "FRP",
+    "functional",
+    "reactive",
+    "programming"
+    "async",
+    "streams"
+  ],
+  "license": "MIT"
+}
