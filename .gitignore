@@ -1,0 +1,14 @@
+
+# OS or Editor folders
+.DS_Store
+.cache
+.project
+.settings
+.tmproj
+*.sublime-project
+*.sublime-workspace
+*.map
+
+# NPM packages folder.
+node_modules/
+npm-debug.log
