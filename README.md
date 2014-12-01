@@ -186,6 +186,12 @@ Listen for errors in this action's EventStream
 
 **Returns**: `function`, Unsubscribe function
 
+
+### action.stream
+
+Access Bacon.js EventStream for this action.
+
+
 * * *
 
 ## Store
