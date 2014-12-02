@@ -13,12 +13,13 @@
     "url" : "https://github.com/skellyb/fluxstream/issues"
   },
   "dependencies": {
-    "baconjs": "^0.7.30"
+    "baconjs": "^0.7.37"
   },
   "keywords": [
     "Flux",
     "React",
     "React.js",
+    "Bacon.js",
     "FRP",
     "functional",
     "reactive",
