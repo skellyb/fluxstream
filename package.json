@@ -1,6 +1,6 @@
 {
   "name": "fluxstream",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "A lightweight Flux implementation that controls data flow around your app using Bacon.js EventStreams.",
   "author": "Shawn Kelly",
   "homepage": "https://github.com/skellyb/fluxstream",
