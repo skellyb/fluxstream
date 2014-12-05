@@ -5,15 +5,22 @@
   "author": "Shawn Kelly",
   "homepage": "https://github.com/skellyb/fluxstream",
   "main": "index.js",
+  "scripts": {
+    "test": "tap-prettify test/*.js"
+  },
   "repository": {
     "type": "git",
     "url": "https://github.com/skellyb/fluxstream.git"
   },
-  "bugs" : {
-    "url" : "https://github.com/skellyb/fluxstream/issues"
+  "bugs": {
+    "url": "https://github.com/skellyb/fluxstream/issues"
   },
   "dependencies": {
     "baconjs": "^0.7.37"
+  },
+  "devDependencies": {
+    "tap-prettify": "0.0.2",
+    "tape": "^3.0.3"
   },
   "keywords": [
     "Flux",
