@@ -6,7 +6,7 @@
   "homepage": "https://github.com/skellyb/fluxstream",
   "main": "index.js",
   "scripts": {
-    "test": "tap-prettify test/*.js"
+    "test": "tape test/*.js"
   },
   "repository": {
     "type": "git",
@@ -19,7 +19,6 @@
     "baconjs": "^0.7.37"
   },
   "devDependencies": {
-    "tap-prettify": "0.0.2",
     "tape": "^3.0.3"
   },
   "keywords": [
