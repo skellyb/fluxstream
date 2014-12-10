@@ -59,7 +59,3 @@ test('Action Creator', function(t) {
     });
     action('fail');
 });
-
-test.skip('Create Multiple Actions', function(t) {
-    
-});
