@@ -240,13 +240,15 @@ Provide a callback for every event that goes through the store's properites.
 
 ### store.combine(streams, callback) 
 
-Combine EventStreams and capture all the events in one object, making multiple async events easier to deal with. Pass in an array of store streams you want to listen to, and the callback will receive an object with all the values. The keys will be the same name as the stream, and the values will be the stream payloads.
+Combine EventStreams and capture event payloads in grouped arrays, making multiple async events easier to deal with. Pass in an array of store streams you want to listen to, and the callback will receive an array with each payload in order once all the combined streams have fired an event.
+
+_Note:_ This behaviour differs from Bacon's combine functions, this uses zipAsArray under the hood.
 
 **Parameters**
 
 **streams**: `Array`, An array of EventStreams.
 
-**callback**: `function`, Handles combined events. An object is passed in with all the associated payloads behind keys with the action names.
+**callback**: `function`, Handles combined events. An array is passed in with all the payloads in order.
 
 **Returns**: `function`, Unsubscribe function
 
@@ -259,7 +261,7 @@ Same as combine, just it unsubscribes itself after first combined event fires.
 
 **streams**: `Array`, An array of EventStreams.
 
-**callback**: `function`, Handles combined events. An object is passed in with all the associated payloads behind keys with the action names.
+**callback**: `function`, Handles combined events. An array is passed in with the first batch of event payloads.
 
 **Returns**: `function`, Unsubscribe function
 
