@@ -1,5 +1,6 @@
 var test = require('tape');
-var createStore = require('../lib/createStore');
+var createStore = require('../lib/store').createStore;
+var defineStore = require('../lib/store').defineStore;
 var createAction = require('../lib/createAction');
 
 test('Store Creator', function(t) {
@@ -111,4 +112,20 @@ test('Store Creator', function(t) {
         t.equal(err, 'Bad payload', 'Errors in store\'s streaming props should flow into main stream.');
     });
     testAction('fail');
+});
+
+test('Store Definition', function(t) {
+    t.plan(3);
+
+    var optionsPassed;
+    var StoreDef = defineStore({
+        init: function(options) {
+            optionsPassed = (options.isSet);
+        }
+    });
+    t.equal(typeof StoreDef, 'function', 'defineStore returns a constructor function');
+
+    var store = new StoreDef({ isSet: true });
+    t.ok(store instanceof StoreDef, 'should be instance of the definition');
+    t.ok(optionsPassed, 'Options passed into constructor should get passed into init()');
 });

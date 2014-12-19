@@ -56,6 +56,14 @@ In its most basic form you can create a store that doesn't do much. The factory 
 ```
 module.exports = flux.createStore();
 ```
+
+#### Alternatively, create a store object that can be instantiated later.
+This can be useful if you need your stores to run on the server, where objects cached by `require()` statements can be a problem.
+```
+var MyStore = flux.defineStore();
+var storeInstance = new MyStore();
+```
+
 #### Configure your store
 Usually, you'd want to pass in a definition to give the store something to do. An _init_ function will run when you create the store, and a special config object will setup streaming properties based on action events.
 ```
@@ -79,6 +87,7 @@ var store = flux.createStore({
     }
 });
 ```
+
 
 #### Respond to changes
 You can either listen to changes to all the changes in a store, or single property in the `streams` object setup in configuration.
@@ -207,13 +216,24 @@ Create a Flux store that exposes Bacon.js properties based off of action EventSt
 **Returns**: `Object`, Instantiated store.
 
 
+### fluxstream.defineStore(definition) 
+
+Create a Flux store that exposes Bacon.js properties based off of action EventStreams. Also allows you to combine streams, making it easy to deal with async dependencies.
+
+**Parameters**
+
+**definition**: `Object`, Extend the store with optional init and config plus any custom functions or properties you might want.
+
+**Returns**: `Object`, Store constructor that accepts and options object accessible in the definition's init function.
+
+
 ### store.configure(config) 
 
 Configure this store's reactive properties. Ideally, pass a config object into the createStore definition, and the store will call this on instantiation.
 
 **Parameters**
 
-**config**: `Object`, keys define the property names, and the object vals need to define an action. Optionally, a map function for transforming the action payload or init for initial property value.
+**config**: `Object`, keys define the property names, and the object vals need to define an action. Optionally, a map function for transforming the action payload or init for initial property value. Optionally, config can be a function that return a config object.
 
 **Returns**: `EventStream`, A stream of all the property streams created.
 
