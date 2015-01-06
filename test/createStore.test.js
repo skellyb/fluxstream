@@ -129,3 +129,24 @@ test('Store Definition', function(t) {
     t.ok(store instanceof StoreDef, 'should be instance of the definition');
     t.ok(optionsPassed, 'Options passed into constructor should get passed into init()');
 });
+
+test('Bad store config', function(t) {
+    t.plan(2);
+
+    (function(){
+        console.warn = function (message) {
+            t.ok(message, 'Warning thrown if undefined action is used in store config.');
+        };
+
+        var noAction;
+        var store = createStore({
+            config: {
+                testProp: {
+                    action: noAction
+                }
+            }
+        });
+
+        t.equal(store.streams.testProp, undefined, 'Streaming prop should not be configured if undefined action used');
+    })();
+});
