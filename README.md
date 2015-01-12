@@ -82,7 +82,28 @@ var store = flux.createStore({
             map: callback,
 
             // (optional) provide an initial value for property
-            init: {}
+            init: {},
+
+            // (optional) action that fetches data for this property
+            inputAction: appAction,
+
+            // input action handler where often a fetch would be made 
+            // and the results delivered to this props main action
+            inputHandler: func,
+
+            // These values are used for caching inputs
+            // inputKey is property path to identifier for a cached result,
+            // i.e. 'id' would you 'object-id' as the key { id: 'object-id' }
+            // supports dot notation and array indices, such as 'results.children.0'
+            // view the property-path npm module for more details
+            // If left undefined, the action payload is the key
+            inputKey: 'string',
+
+            // cacheKey points to the value in the property data that defines its cache ID
+            cacheKey: 'string',
+
+            // limit number of items that can accumulate in cache, defaults to 100
+            cacheLimit: 100,
         }
     }
 });
@@ -242,7 +263,12 @@ The config object should look something like this:
   propName: {
      action: action,
      map: callback,
-     init: {}
+     init: {},
+     inputAction: action,
+     inputHandler: func,
+     inputKey: 'string',
+     cacheKey: 'string',
+     cacheLimit: 100
   }
 }
 
