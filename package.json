@@ -1,6 +1,6 @@
 {
   "name": "fluxstream",
-  "version": "1.3.0",
+  "version": "1.4.0",
   "description": "A lightweight Flux implementation that controls data flow around your app using Bacon.js EventStreams.",
   "author": "Shawn Kelly",
   "homepage": "https://github.com/skellyb/fluxstream",
@@ -16,6 +16,7 @@
     "url": "https://github.com/skellyb/fluxstream/issues"
   },
   "dependencies": {
+    "amp-is-empty": "^1.0.2",
     "baconjs": "^0.7.41",
     "property-path": "0.0.5"
   },
