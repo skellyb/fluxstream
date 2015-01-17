@@ -81,6 +81,9 @@ var store = flux.createStore({
             // (optional) transform the event payloads
             map: callback,
 
+            // (optional) use this if you want return a new Bacon EventStream for each payload
+            asyncMap: callback,
+
             // (optional) provide an initial value for property
             init: {},
 
@@ -263,6 +266,7 @@ The config object should look something like this:
   propName: {
      action: action,
      map: callback,
+     asyncMap: callback,
      init: {},
      inputAction: action,
      inputHandler: func,
