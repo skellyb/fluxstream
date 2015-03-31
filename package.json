@@ -6,7 +6,8 @@
   "homepage": "https://github.com/skellyb/fluxstream",
   "main": "index.js",
   "scripts": {
-    "test": "tape test/*.js"
+    "test": "tape test/*.js",
+    "build": "babel src --out-dir lib"
   },
   "repository": {
     "type": "git",
@@ -17,11 +18,13 @@
   },
   "dependencies": {
     "amp-is-empty": "^1.0.2",
-    "baconjs": "^0.7.41",
-    "property-path": "0.0.5"
+    "baconjs": "^0.7.53",
+    "immutable": "^3.7.1",
+    "property-path": "0.0.13"
   },
   "devDependencies": {
-    "tape": "^3.0.3"
+    "babel": "^4.7.16",
+    "tape": "^3.5.0"
   },
   "keywords": [
     "Flux",

@@ -1,6 +1,4 @@
-"use strict";
-
-var Bacon = require("baconjs");
+var Bacon = require('baconjs');
 
 /**
  * Create a Flux action with self-contained dispatcher. Just call the returned
@@ -10,17 +8,17 @@ var Bacon = require("baconjs");
  *                             is sent instead.
  * @return {Function}        Action function
  */
-module.exports = function (validate) {
+module.exports = function(validate) {
     var dispatcher = new Bacon.Bus();
-    var fn = function fn(payload) {
-        if (validate && typeof validate === "function") {
+    var fn = function(payload) {
+        if (validate && typeof validate === 'function') {
             if (!validate(payload)) {
-                return dispatcher.error("Bad payload");
+                return dispatcher.error('Bad payload');
             }
         }
 
         dispatcher.push(payload);
-    };
+    }
 
     /**
      * Access Bacon.js EventStream for this action
@@ -28,13 +26,14 @@ module.exports = function (validate) {
      */
     fn.stream = dispatcher;
 
+
     /**
      * Provide a callback for every event that goes through this Action.
      * @param  {Function} callback Event callback will receive whatever payload
      *                             was dispatched through this action.    
      * @return {Function}          Unsubscribe function
      */
-    fn.listen = function (callback) {
+    fn.listen = function(callback) {
         return dispatcher.onValue(callback);
     };
 
@@ -44,8 +43,8 @@ module.exports = function (validate) {
      *                             was dispatched through this action.    
      * @return {Function}          Unsubscribe function
      */
-    fn.listenOnce = function (callback) {
-        return dispatcher.onValue(function () {
+    fn.listenOnce = function(callback) {
+        return dispatcher.onValue(function() {
             callback.apply(null, arguments);
             return Bacon.noMore;
         });
@@ -56,7 +55,7 @@ module.exports = function (validate) {
      * @param  {Function} callback Handle error
      * @return {Function}          Unsubscribe function
      */
-    fn.errors = function (callback) {
+    fn.errors = function(callback) {
         return dispatcher.onError(callback);
     };
 
