@@ -24,6 +24,7 @@
   },
   "devDependencies": {
     "babel": "^4.7.16",
+    "standard": "^3.6.1",
     "tape": "^3.5.0"
   },
   "keywords": [
@@ -38,5 +39,10 @@
     "async",
     "streams"
   ],
-  "license": "MIT"
+  "license": "MIT",
+  "standard": {
+    "ignore": [
+      "**/lib/**"
+    ]
+  }
 }
