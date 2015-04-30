@@ -6,7 +6,7 @@
   "homepage": "https://github.com/skellyb/fluxstream",
   "main": "index.js",
   "scripts": {
-    "test": "babel-tape-runner test/*.js",
+    "test": "npm run build; standard && babel-tape-runner test/*.js",
     "build": "babel src --out-dir lib"
   },
   "repository": {
