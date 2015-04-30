@@ -17,7 +17,7 @@ test('Actions', function (t) {
   t.equal(callCount, 1, 'once() unsubscribes self')
 
   action = new Action()
-  action.stream().onValue((payload) => {
+  action.getStream().onValue((payload) => {
     t.equal(payload, 'Bacon', 'stream() returns a Bacon.js EventStream')
   })
   action('Bacon')

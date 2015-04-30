@@ -5,7 +5,7 @@ class Action {
     const _dispatcher = new Bacon.Bus()
     const _func = (payload) => _dispatcher.push(payload)
 
-    _func.stream = () => _dispatcher
+    _func.getStream = () => _dispatcher
 
     _func.observe = (callback) => _dispatcher.onValue(callback)
 
