@@ -1,30 +1,29 @@
-const Bacon = require('baconjs')
+const Rx = require('rx')
 const Im = require('immutable')
 
 class Store {
-  constructor (core) {
+  constructor (key, core) {
+    this._key = key
     this._core = core
-    this._stream = new Bacon.Bus()
+    this._input = new Rx.Subject()
+    this.observable = this._input.publish()
+    this.observable.connect()
 
-    const handlers = this.getActionHandlers()
+    const handlers = this.change()
+    if (!handlers) return
+
     const actionNames = Object.keys(handlers)
-    const actions = this._core.addActions(...actionNames)
+    const actions = this._core.createActions(...actionNames)
     actionNames.forEach((name) => {
-      actions[name].observe(this._handleAction.bind(this, handlers[name]))
+      actions[name].subscribe(this._handleAction.bind(this, handlers[name]))
     })
-  }
-
-  getKey () {
-    throw new Error('No key defined.')
   }
 
   getInitialState () {
     return {}
   }
 
-  getActionHandlers () {
-    throw new Error('No action handlers defined.')
-  }
+  change () {}
 
   shouldUpdate (updatedState, currentState) {
     return true
@@ -32,12 +31,12 @@ class Store {
 
   didUpdate (currentState) {}
 
-  observe (callback) {
-    return this._stream.onValue(callback)
+  subscribe (valHandler, errHandler, completeHandler) {
+    return this.observable.subscribe(valHandler, errHandler, completeHandler)
   }
 
-  getStream () {
-    return this._stream
+  replaceState (state) {
+    this._input.onNext(state)
   }
 
   _validateUpdate (updatedState, currentState) {
@@ -45,7 +44,7 @@ class Store {
   }
 
   _handleAction (handler, payload) {
-    let currentState = this._core.get(this.getKey())
+    let currentState = this._core.get(this._key)
     if (Im.Iterable.isIterable(currentState)) {
       currentState = currentState.toJS()
     }
@@ -53,7 +52,7 @@ class Store {
     const updatedState = handler(payload, currentState)
 
     if (this._validateUpdate(updatedState, currentState)) {
-      this._stream.push(updatedState)
+      this._input.onNext(updatedState)
     }
   }
 }

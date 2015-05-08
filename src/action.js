@@ -1,22 +1,26 @@
-const Bacon = require('baconjs')
+const Rx = require('rx')
 
 class Action {
   constructor () {
-    const _dispatcher = new Bacon.Bus()
-    const _func = (payload) => _dispatcher.push(payload)
+    const input = new Rx.Subject()
+    const dispatcher = input.publish()
+    const actionFunc = (payload) => input.onNext(payload)
 
-    _func.getStream = () => _dispatcher
+    dispatcher.connect()
 
-    _func.observe = (callback) => _dispatcher.onValue(callback)
+    actionFunc.observable = dispatcher
 
-    _func.once = (callback) => {
-      return _dispatcher.onValue((payload) => {
-        callback(payload)
-        return Bacon.noMore
-      })
+    actionFunc.subscribe = (valHandler, errHandler, completeHandler) => {
+      return dispatcher.subscribe(valHandler, errHandler, completeHandler)
     }
 
-    return _func
+    actionFunc.once = (valHandler, errHandler, completeHandler) => {
+      return dispatcher
+        .take(1)
+        .subscribe(valHandler, errHandler, completeHandler)
+    }
+
+    return actionFunc
   }
 }
 

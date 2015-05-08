@@ -5,9 +5,9 @@ test('Actions', function (t) {
   t.plan(3)
 
   let action = new Action()
-  let unsub = action.observe((payload) => t.equal(payload, 'Test Data', 'Payload should flow to listeners.'))
+  let subscription = action.subscribe((payload) => t.equal(payload, 'Test Data', 'Payload should flow to listeners'))
   action('Test Data')
-  unsub()
+  subscription.dispose()
 
   let callCount = 0
   action = new Action()
@@ -17,8 +17,13 @@ test('Actions', function (t) {
   t.equal(callCount, 1, 'once() unsubscribes self')
 
   action = new Action()
-  action.getStream().onValue((payload) => {
-    t.equal(payload, 'Bacon', 'stream() returns a Bacon.js EventStream')
-  })
-  action('Bacon')
+  action.observable
+    .filter((payload) => {
+      return payload === 'RxJS'
+    })
+    .subscribe((payload) => {
+      t.equal(payload, 'RxJS', 'rx property gives access to RxJS observable and all of its methods')
+    })
+  action('RxJS')
+
 })

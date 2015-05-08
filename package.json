@@ -1,7 +1,7 @@
 {
   "name": "fluxstream",
   "version": "1.4.1",
-  "description": "A lightweight Flux implementation that controls data flow around your app using Bacon.js EventStreams.",
+  "description": "A lightweight Flux implementation that controls app state using RxJS and ImmutableJS.",
   "author": "Shawn Kelly",
   "homepage": "https://github.com/skellyb/fluxstream",
   "main": "index.js",
@@ -17,25 +17,23 @@
     "url": "https://github.com/skellyb/fluxstream/issues"
   },
   "dependencies": {
-    "amp-is-empty": "^1.0.2",
-    "baconjs": "^0.7.53",
     "immutable": "^3.7.1",
-    "property-path": "0.0.13"
+    "rx": "^2.5.2"
   },
   "devDependencies": {
-    "babel": "^4.7.16",
-    "standard": "^3.6.1",
-    "tape": "^3.5.0"
+    "babel": "^5.2.16",
+    "babel-tape-runner": "^1.1.0",
+    "standard": "^3.7.3",
+    "tape": "^4.0.0"
   },
   "keywords": [
     "Flux",
     "React",
     "React.js",
-    "Bacon.js",
+    "RxJS",
     "FRP",
     "functional",
     "reactive",
-    "programming",
     "async",
     "streams"
   ],

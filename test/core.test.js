@@ -3,15 +3,11 @@ const Core = require('../lib/core.js')
 const Store = require('../lib/store.js')
 
 class TestStore extends Store {
-  getKey () {
-    return 'test'
-  }
-
   getInitialState () {
     return 'Initial state'
   }
 
-  getActionHandlers () {
+  change () {
     return {
       testAction: (payload, state) => payload
     }
@@ -19,15 +15,11 @@ class TestStore extends Store {
 }
 
 class TwoTestStore extends Store {
-  getKey () {
-    return 'twoTest'
-  }
-
   getInitialState () {
     return { prop: 'two' }
   }
 
-  getActionHandlers () {
+  change () {
     return {
       update: (payload, state) => {
         state.prop = payload
@@ -38,13 +30,13 @@ class TwoTestStore extends Store {
 }
 
 test('Core', function (t) {
-  t.plan(11)
+  t.plan(15)
 
   let core = new Core()
   t.ok(core instanceof Core, 'Instantiated core')
 
   core = new Core()
-  core.createStores(TestStore)
+  core.createStores({ test: TestStore })
   let firstValue = core.get('test')
   t.equal(firstValue, 'Initial state', 'Creating new store sets up initial state')
 
@@ -53,43 +45,72 @@ test('Core', function (t) {
   t.equal(secondValue, 'New state', 'State is updated after stores action is called')
 
   core = new Core()
-  core.addActions('testIt')
-  core.actions.testIt.observe((payload) => {
+  core.createActions('testIt')
+  core.actions.testIt.subscribe((payload) => {
     t.ok(payload, 'addActions creates an observable action')
   })
   core.actions.testIt(true)
 
   core = new Core()
-  core.createStores(TestStore, TwoTestStore)
-  core.observe('twoTest', (state) => t.equal(state.prop, 'three', 'setup single key observer and recieve latest state'))
+  core.createStores({ test: TestStore, twoTest: TwoTestStore })
+  core.stores.twoTest.subscribe((state) => t.equal(state.prop, 'three', 'setup single key observer and recieve latest state'))
   core.actions.update('three')
 
   core = new Core()
-  core.createStores(TestStore, TwoTestStore)
-  core.observe('test', ['twoTest', 'prop'], (firstState, secondState) => {
-    t.equal(firstState, 'Initial state', 'State is sent to handler when any stores are listened to')
-    t.equal(secondState, 'three', 'If keypath is included, it will receive nested state')
-  })
-  core.actions.update('three')
+  core.createStores({ test: TestStore, twoTest: TwoTestStore })
+  core
+    .combineStores('test', 'twoTest')
+    .take(1)
+    .subscribe((payloads) => {
+      t.equal(payloads[0], 'Initial state', 'State is sent to handler when any store triggers a change')
+      t.equal(payloads[1].prop, 'Update to 2nd store', 'State values are delivered in same order as combine arguments')
+    })
+  core.actions.update('Update to 2nd store')
 
   core = new Core()
-  core.createStores(TestStore, TwoTestStore)
-  core.zip('test', 'twoTest', (firstState, secondState) => {
-    t.equal(firstState, 'two events', 'State is sent to handler once all stores have have triggered a change')
-    t.equal(secondState.prop, 'one event', 'Make sure handler isn\'t called until both stores have changed')
-  })
-  core.actions.update('one event')
-  core.actions.testAction('two events')
+  core.createActions('one', 'two')
+  core
+    .waitForActions('one', 'two')
+    .take(1)
+    .subscribe((payloads) => {
+      t.equal(payloads[0], '1', 'waitForActions creates an observable stream that only emit events when all actions have been called')
+      t.equal(payloads[1], '2', 'the payloads are passed in an array, same order as waitForActions arguments')
+    })
+  core.actions.one('1')
+  core.actions.two('2')
 
   core = new Core()
-  core.createStores(TestStore)
+  core.createStores({ test: TestStore, twoTest: TwoTestStore })
+  core
+    .waitForStores('test', 'twoTest')
+    .subscribe((payloads) => {
+      t.equal(payloads[0], 'test event', 'State is sent to handler once all stores have have triggered a change')
+      t.equal(payloads[1].prop, 'twotest event', 'Make sure handler isn\'t called until both stores have changed')
+    })
+  core.actions.update('twotest event')
+  core.actions.testAction('test event')
+
+  core = new Core()
+  core.createStores({ test: TestStore })
   core.actions.testAction('snapshot')
   let currentState = core.takeSnapshot()
   t.equal(currentState.test, 'snapshot', 'Retrieve a snapshot of current app state')
 
   core = new Core()
-  core.createStores(TestStore)
+  core.createStores({ test: TestStore })
   core.restore({ test: 'Restored state' })
   let restoreValue = core.get('test')
   t.equal(restoreValue, 'Restored state', 'Restore state from object')
+
+  core = new Core({
+    stores: {
+      test: TestStore
+    },
+    actions: ['go']
+  })
+  core.actions.go.subscribe((payload) => t.equal(payload, 'action', 'Action setup via constructor options'))
+  core.stores.test.subscribe((payload) => t.equal(payload, 'store', 'Store setup via constructor options'))
+  core.actions.go('action')
+  core.actions.testAction('store')
+
 })

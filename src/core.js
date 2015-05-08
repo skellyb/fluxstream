@@ -1,36 +1,39 @@
 const Im = require('immutable')
 const Action = require('./action')
-const Bacon = require('baconjs')
+const Rx = require('rx')
 
 class Core {
   constructor (options) {
     const opts = options || {}
     this._state = Im.Map({})
-    this._stores = Im.Map(opts.stores || {})
-    this._actions = Im.Map(opts.actions || {})
+    this._stores = Im.Map({})
+    this._actions = Im.Map({})
+
+    if (opts.stores) this.createStores(opts.stores)
+    if (opts.actions) this.createActions(...opts.actions)
   }
 
-  createStores (...storeClasses) {
+  createStores (storeMap) {
+    const keys = Object.keys(storeMap)
     let newStores = Im.Map({})
 
-    storeClasses.forEach((Def) => {
-      const initStore = new Def(this)
-      const key = initStore.getKey()
+    keys.forEach((key) => {
+      const StoreDef = storeMap[key]
+      const initStore = new StoreDef(key, this)
       newStores = newStores.set(key, initStore)
 
       this._updateState(key, initStore.getInitialState())
 
-      initStore.observe((updatedState) => {
+      initStore.subscribe((updatedState) => {
         this._updateState(key, updatedState)
         initStore.didUpdate(this.get(key))
       })
     })
 
     this._stores = this._stores.merge(newStores)
-    console.log(this._state)
   }
 
-  addActions (...actionNames) {
+  createActions (...actionNames) {
     let newActions = Im.Map({})
     actionNames.forEach((name) => newActions = newActions.set(name, new Action()))
     this._actions = newActions.merge(this._actions)
@@ -41,31 +44,26 @@ class Core {
     return this._actions.toObject()
   }
 
+  get stores () {
+    return this._stores.toObject()
+  }
+
   get (keyPath) {
-    return (Array.isArray(keyPath)) ? this._state.getIn(keyPath) : this._state.get(keyPath)
+    const val = (Array.isArray(keyPath)) ? this._state.getIn(keyPath) : this._state.get(keyPath)
+    return (Im.Iterable.isIterable(val)) ? val.toJS() : val
   }
 
-  observe (...keyPathsAndHandler) {
-    const { args: keyPaths, callback: handler } = this._parseArgsAndCallback(keyPathsAndHandler)
-    const observeStream = Bacon.mergeAll(
-      this._getStoreStreams(keyPaths)
-    )
-
-    return observeStream.onValue(() => {
-      handler(...this._getStateFromPaths(keyPaths))
-    })
+  combineStores (...stores) {
+    return Rx.Observable.merge(...this._getObservables('_stores', stores))
+      .map(() => stores.map((name) => this.get(name)))
   }
 
-  // TODO: Name better: observeAll, waitFor or something
-  zip (...keyPathsAndHandler) {
-    const { args: keyPaths, callback: handler } = this._parseArgsAndCallback(keyPathsAndHandler)
-    const zipStream = Bacon.zipAsArray(
-      this._getStoreStreams(keyPaths)
-    )
+  waitForStores (...stores) {
+    return this._waitFor('_stores', stores)
+  }
 
-    return zipStream.onValue(() => {
-      handler(...this._getStateFromPaths(keyPaths))
-    })
+  waitForActions (...actions) {
+    return this._waitFor('_actions', actions)
   }
 
   takeSnapshot () {
@@ -73,39 +71,25 @@ class Core {
   }
 
   restore (state) {
-    // TODO: Still needs to trigger observers
-    this._state = Im.fromJS(state)
-  }
-
-  _parseArgsAndCallback (argsAndCB) {
-    const args = argsAndCB.slice(0, -1)
-    const callback = argsAndCB.pop()
-
-    if (typeof callback !== 'function') throw new Error('No callback argument defined')
-
-    return { args, callback }
-  }
-
-  _getStoreStreams (keyPaths) {
-    return keyPaths.map((key) => {
-      const storeKey = (Array.isArray(key)) ? key[0] : key
-      return this._stores.get(storeKey).getStream()
+    const storeKeys = Object.keys(state)
+    storeKeys.forEach((key) => {
+      this._stores.get(key).replaceState(state[key])
     })
   }
 
-  _getStateFromPaths (keyPaths) {
-    return keyPaths.map((path) => {
-      const pathArr = (Array.isArray(path)) ? path : [path]
-      const val = this._state.getIn(pathArr)
-      return (Im.Iterable.isIterable(val)) ? val.toJS() : val
+  _waitFor (type, keys) {
+    return Rx.Observable.just().flatMap(() => {
+      return Rx.Observable.zipArray(...this._getObservables(type, keys))
     })
+  }
+
+  _getObservables (type, keys) {
+    const storeKeys = (Array.isArray(keys)) ? keys : [keys]
+    return storeKeys.map((name) => this[type].get(name).observable)
   }
 
   _updateState (name, data) {
-    const update = {}
-    update[name] = data
-    const immutableUpdate = Im.fromJS(update)
-    this._state = this._state.merge(immutableUpdate)
+    this._state = this._state.set(name, Im.fromJS(data))
   }
 }
 

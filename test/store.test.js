@@ -1,75 +1,53 @@
 const test = require('tape')
-const Bacon = require('baconjs')
 const Store = require('../lib/store.js')
-
-const mockCore = {
-  get: function (key) {
-    return { key: 'value' }
-  },
-
-  addActions: function (names) {
-    const dispatcher = new Bacon.Bus()
-    const func = (payload) => dispatcher.push(payload)
-    func.observe = (callback) => dispatcher.onValue(callback)
-    mockCore.actions = {
-      testAction: func
-    }
-    return { testAction: func }
-  }
-}
+const Core = require('../lib/core.js')
 
 class TestStore extends Store {
-  getKey () {
-    return 'tester'
-  }
-
   getInitialState () {
-    return { key: 'value' }
+    return 'init'
   }
 
-  getActionHandlers () {
+  change () {
     return {
-      testAction: (payload, state) => {
-        const update = state
-        update.key = payload
-        return update
-      }
+      testAction: (payload, state) => payload
     }
   }
 
   shouldUpdate (updated, current) {
-    return updated.key !== 'Wrong value'
-  }
-}
-
-class NoActionStore extends Store {}
-
-class NoKeyStore extends Store {
-  getActionHandlers () {
-    return {
-      testAction: (payload, state) => payload
-    }
+    return updated !== 'Wrong value'
   }
 }
 
 test('Stores', function (t) {
   t.plan(3)
 
-  let store = new TestStore(mockCore)
-  store.observe((updatedState) => {
-    t.equal(updatedState.key, 'New value', 'Changes to state are observable')
+  let core = new Core()
+  core.createStores({ tester: TestStore })
+  t.equal(core.get('tester'), 'init', 'Initial state is set')
+
+  core = new Core()
+  core.createStores({ tester: TestStore })
+  core.stores.tester.subscribe((updatedState) => {
+    t.equal(updatedState, 'New value', 'Changes to state are observable')
   })
-  mockCore.actions.testAction('New value')
+  core.actions.testAction('New value')
 
-  t.throws(NoActionStore.bind(this, mockCore), 'Error thrown if no action handlers are defined')
-
-  store = new NoKeyStore(mockCore)
-  t.throws(NoKeyStore.getKey, 'Error thrown if no key defined')
-
-  store = new TestStore(mockCore)
-  store.observe((updatedState) => {
+  core = new Core()
+  core.createStores({ tester: TestStore })
+  core.stores.tester.subscribe((updatedState) => {
     t.fail('shouldUpdate() should prevent this change from happening')
   })
-  mockCore.actions.testAction('Wrong value')
+  core.actions.testAction('Wrong value')
 
+  core = new Core()
+  core.createStores({ tester: TestStore })
+  core.stores.tester
+    .observable
+    .map((state) => {
+      return state + ' mapped?'
+    })
+    .subscribe((value) => {
+      t.equal(value, 'Is it mapped?', 'Test store.observable provides an RxJS observable')
+    })
+  core.actions.testAction('Is it')
 })
