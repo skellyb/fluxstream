@@ -1,6 +1,6 @@
-const Rx = require('rx')
+import Rx from 'rx'
 
-class Action {
+export default class Action {
   constructor () {
     const input = new Rx.Subject()
     const dispatcher = input.publish()
@@ -23,5 +23,3 @@ class Action {
     return actionFunc
   }
 }
-
-module.exports = Action
