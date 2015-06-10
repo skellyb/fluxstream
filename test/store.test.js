@@ -7,7 +7,7 @@ class TestStore extends Store {
     return 'init'
   }
 
-  change () {
+  update () {
     return {
       testAction: (payload, state) => payload
     }
@@ -27,14 +27,14 @@ test('Stores', function (t) {
 
   core = new Core()
   core.createStores({ tester: TestStore })
-  core.stores.tester.subscribe((updatedState) => {
-    t.equal(updatedState, 'New value', 'Changes to state are observable')
+  core.stores.tester.onUpdate((state) => {
+    t.equal(state.tester, 'New value', 'Changes to state are observable')
   })
   core.actions.testAction('New value')
 
   core = new Core()
   core.createStores({ tester: TestStore })
-  core.stores.tester.subscribe((updatedState) => {
+  core.stores.tester.onUpdate((state) => {
     t.fail('shouldUpdate() should prevent this change from happening')
   })
   core.actions.testAction('Wrong value')
