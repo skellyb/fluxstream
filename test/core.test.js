@@ -7,7 +7,7 @@ class TestStore extends Store {
     return 'Initial state'
   }
 
-  change () {
+  update () {
     return {
       testAction: (payload, state) => payload
     }
@@ -19,7 +19,7 @@ class TwoTestStore extends Store {
     return { prop: 'two' }
   }
 
-  change () {
+  update () {
     return {
       update: (payload, state) => {
         state.prop = payload
@@ -53,7 +53,7 @@ test('Core', function (t) {
 
   core = new Core()
   core.createStores({ test: TestStore, twoTest: TwoTestStore })
-  core.stores.twoTest.subscribe((state) => t.equal(state.prop, 'three', 'setup single key observer and recieve latest state'))
+  core.stores.twoTest.onUpdate((state) => t.equal(state.twoTest.prop, 'three', 'setup single key observer and recieve latest state'))
   core.actions.update('three')
 
   core = new Core()
@@ -109,7 +109,7 @@ test('Core', function (t) {
     actions: ['go']
   })
   core.actions.go.subscribe((payload) => t.equal(payload, 'action', 'Action setup via constructor options'))
-  core.stores.test.subscribe((payload) => t.equal(payload, 'store', 'Store setup via constructor options'))
+  core.stores.test.onUpdate((state) => t.equal(state.test, 'store', 'Store setup via constructor options'))
   core.actions.go('action')
   core.actions.testAction('store')
 
