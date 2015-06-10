@@ -1,7 +1,7 @@
-const Rx = require('rx')
-const Im = require('immutable')
+import Rx from 'rx'
+import Im from 'immutable'
 
-class Store {
+export default class Store {
   constructor (key, core) {
     this._key = key
     this._core = core
@@ -9,34 +9,50 @@ class Store {
     this.observable = this._input.publish()
     this.observable.connect()
 
-    const handlers = this.change()
-    if (!handlers) return
+    const updaters = this.update()
+    const handlers = this.handle()
+    if (!updaters && !handlers) return
 
-    const actionNames = Object.keys(handlers)
-    const actions = this._core.createActions(...actionNames)
-    actionNames.forEach((name) => {
-      actions[name].subscribe(this._handleAction.bind(this, handlers[name]))
-    })
+    if (updaters && typeof updaters === 'object') {
+      Object.keys(updaters).forEach((name) => {
+        if (!this._validateAction(name)) return
+        this._core.actions[name].subscribe(this._handleAction.bind(this, updaters[name]))
+      })  
+    }
+
+    if (handlers && typeof handlers === 'object') {
+      Object.keys(handlers).forEach((name) => {
+        if (!this._validateAction(name)) return
+        this._core.actions[name].subscribe(handlers[name].bind(this, this._core))
+      })
+    }
   }
 
   getInitialState () {
     return {}
   }
 
-  change () {}
+  handle () {}
+
+  update () {}
 
   shouldUpdate (updatedState, currentState) {
     return true
   }
 
-  didUpdate (currentState) {}
-
-  subscribe (valHandler, errHandler, completeHandler) {
-    return this.observable.subscribe(valHandler, errHandler, completeHandler)
+  onUpdate (callback) {
+    return this.observable.subscribe((updatedState) => callback({ [this._key]: updatedState }))
   }
+
+  didUpdate (currentState) {}
 
   replaceState (state) {
     this._input.onNext(state)
+  }
+
+  _validateAction (name) {
+    if (this._core.actions[name]) return true
+    throw new Error(`No action named ${name}`)
   }
 
   _validateUpdate (updatedState, currentState) {
@@ -49,12 +65,10 @@ class Store {
       currentState = currentState.toJS()
     }
 
-    const updatedState = handler(payload, currentState)
+    const updatedState = handler(this._core, payload, currentState)
 
     if (this._validateUpdate(updatedState, currentState)) {
       this._input.onNext(updatedState)
     }
   }
 }
-
-module.exports = Store
