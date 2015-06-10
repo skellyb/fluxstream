@@ -3,14 +3,13 @@ import Action from './action'
 import Rx from 'rx'
 
 export default class Core {
-  constructor (options = {}) {
-    const opts = options
+  constructor (config = {}) {
     this._state = Im.Map({})
     this._stores = Im.Map({})
     this._actions = Im.Map({})
 
-    if (opts.actions) this.createActions(...opts.actions)
-    if (opts.stores) this.createStores(opts.stores)
+    if (config.actions) this.createActions(...config.actions)
+    if (config.stores) this.createStores(config.stores)
   }
 
   createActions (...actionNames) {
