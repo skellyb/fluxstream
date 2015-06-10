@@ -19,8 +19,8 @@ class TestStore extends Store {
     }
   }
 
-  shouldUpdate (updated, current) {
-    return updated !== 'Wrong value'
+  shouldUpdate (updating, current) {
+    return updating !== 'Wrong value'
   }
 }
 

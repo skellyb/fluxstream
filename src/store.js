@@ -16,7 +16,7 @@ export default class Store {
     if (updaters && typeof updaters === 'object') {
       Object.keys(updaters).forEach((name) => {
         if (!this._validateAction(name)) return
-        this._core.actions[name].subscribe(this._handleAction.bind(this, updaters[name]))
+        this._core.actions[name].subscribe(this._handleUpdate.bind(this, updaters[name]))
       })
     }
 
@@ -36,7 +36,7 @@ export default class Store {
 
   update () {}
 
-  shouldUpdate (updatedState, currentState) {
+  shouldUpdate (updatingState, currentState) {
     return true
   }
 
@@ -55,20 +55,16 @@ export default class Store {
     throw new Error(`No action named ${name}`)
   }
 
-  _validateUpdate (updatedState, currentState) {
-    return (updatedState !== undefined && this.shouldUpdate(updatedState, currentState))
+  _validateUpdate (updatingState, currentState) {
+    return (updatingState !== undefined && this.shouldUpdate(updatingState, currentState))
   }
 
-  _handleAction (handler, payload) {
-    let currentState = this._core.get(this._key)
-    if (Im.Iterable.isIterable(currentState)) {
-      currentState = currentState.toJS()
-    }
+  _handleUpdate (updateHandler, payload) {
+    const currentState = this._core.get(this._key)
+    const updatingState = updateHandler(this._core, payload, currentState)
 
-    const updatedState = handler(this._core, payload, currentState)
-
-    if (this._validateUpdate(updatedState, currentState)) {
-      this._input.onNext(updatedState)
+    if (this._validateUpdate(updatingState, currentState)) {
+      this._input.onNext(updatingState)
     }
   }
 }
