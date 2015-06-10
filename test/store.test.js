@@ -7,9 +7,15 @@ class TestStore extends Store {
     return 'init'
   }
 
+  handle () {
+    return {
+      noChange: (core, payload) => payload.pass('Store handled action')
+    }
+  }
+
   update () {
     return {
-      testAction: (payload, state) => payload
+      testAction: (core, payload, state) => payload
     }
   }
 
@@ -19,13 +25,15 @@ class TestStore extends Store {
 }
 
 test('Stores', function (t) {
-  t.plan(3)
+  t.plan(4)
 
   let core = new Core()
+  core.createActions('testAction', 'noChange')
   core.createStores({ tester: TestStore })
   t.equal(core.get('tester'), 'init', 'Initial state is set')
 
   core = new Core()
+  core.createActions('testAction', 'noChange')
   core.createStores({ tester: TestStore })
   core.stores.tester.onUpdate((state) => {
     t.equal(state.tester, 'New value', 'Changes to state are observable')
@@ -33,6 +41,7 @@ test('Stores', function (t) {
   core.actions.testAction('New value')
 
   core = new Core()
+  core.createActions('testAction', 'noChange')
   core.createStores({ tester: TestStore })
   core.stores.tester.onUpdate((state) => {
     t.fail('shouldUpdate() should prevent this change from happening')
@@ -40,6 +49,7 @@ test('Stores', function (t) {
   core.actions.testAction('Wrong value')
 
   core = new Core()
+  core.createActions('testAction', 'noChange')
   core.createStores({ tester: TestStore })
   core.stores.tester
     .observable
@@ -50,4 +60,10 @@ test('Stores', function (t) {
       t.equal(value, 'Is it mapped?', 'Test store.observable provides an RxJS observable')
     })
   core.actions.testAction('Is it')
+
+  core = new Core()
+  core.createActions('testAction', 'noChange')
+  core.createStores({ tester: TestStore })
+  core.stores.tester.onUpdate((state) => t.fail('No change should be made from action in store.handle'))
+  core.actions.noChange(t)
 })

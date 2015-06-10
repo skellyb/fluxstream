@@ -9,7 +9,7 @@ class TestStore extends Store {
 
   update () {
     return {
-      testAction: (payload, state) => payload
+      testAction: (core, payload, state) => payload
     }
   }
 }
@@ -21,7 +21,7 @@ class TwoTestStore extends Store {
 
   update () {
     return {
-      update: (payload, state) => {
+      update: (core, payload, state) => {
         state.prop = payload
         return state
       }
@@ -36,6 +36,7 @@ test('Core', function (t) {
   t.ok(core instanceof Core, 'Instantiated core')
 
   core = new Core()
+  core.createActions('testAction')
   core.createStores({ test: TestStore })
   let firstValue = core.get('test')
   t.equal(firstValue, 'Initial state', 'Creating new store sets up initial state')
@@ -47,16 +48,18 @@ test('Core', function (t) {
   core = new Core()
   core.createActions('testIt')
   core.actions.testIt.subscribe((payload) => {
-    t.ok(payload, 'addActions creates an observable action')
+    t.ok(payload, 'createActions creates an observable action')
   })
   core.actions.testIt(true)
 
   core = new Core()
+  core.createActions('testAction', 'update')
   core.createStores({ test: TestStore, twoTest: TwoTestStore })
   core.stores.twoTest.onUpdate((state) => t.equal(state.twoTest.prop, 'three', 'setup single key observer and recieve latest state'))
   core.actions.update('three')
 
   core = new Core()
+  core.createActions('testAction', 'update')
   core.createStores({ test: TestStore, twoTest: TwoTestStore })
   core
     .combineStores('test', 'twoTest')
@@ -80,6 +83,7 @@ test('Core', function (t) {
   core.actions.two('2')
 
   core = new Core()
+  core.createActions('testAction', 'update')
   core.createStores({ test: TestStore, twoTest: TwoTestStore })
   core
     .waitForStores('test', 'twoTest')
@@ -91,12 +95,14 @@ test('Core', function (t) {
   core.actions.testAction('test event')
 
   core = new Core()
+  core.createActions('testAction')
   core.createStores({ test: TestStore })
   core.actions.testAction('snapshot')
   let currentState = core.takeSnapshot()
   t.equal(currentState.test, 'snapshot', 'Retrieve a snapshot of current app state')
 
   core = new Core()
+  core.createActions('testAction')
   core.createStores({ test: TestStore })
   core.restore({ test: 'Restored state' })
   let restoreValue = core.get('test')
@@ -106,7 +112,7 @@ test('Core', function (t) {
     stores: {
       test: TestStore
     },
-    actions: ['go']
+    actions: ['go', 'testAction']
   })
   core.actions.go.subscribe((payload) => t.equal(payload, 'action', 'Action setup via constructor options'))
   core.stores.test.onUpdate((state) => t.equal(state.test, 'store', 'Store setup via constructor options'))

@@ -17,7 +17,7 @@ export default class Store {
       Object.keys(updaters).forEach((name) => {
         if (!this._validateAction(name)) return
         this._core.actions[name].subscribe(this._handleAction.bind(this, updaters[name]))
-      })  
+      })
     }
 
     if (handlers && typeof handlers === 'object') {
