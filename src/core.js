@@ -1,16 +1,23 @@
-const Im = require('immutable')
-const Action = require('./action')
-const Rx = require('rx')
+import Im from 'immutable'
+import Action from './action'
+import Rx from 'rx'
 
-class Core {
-  constructor (options) {
-    const opts = options || {}
+export default class Core {
+  constructor (options = {}) {
+    const opts = options
     this._state = Im.Map({})
     this._stores = Im.Map({})
     this._actions = Im.Map({})
 
-    if (opts.stores) this.createStores(opts.stores)
     if (opts.actions) this.createActions(...opts.actions)
+    if (opts.stores) this.createStores(opts.stores)
+  }
+
+  createActions (...actionNames) {
+    let newActions = Im.Map({})
+    actionNames.forEach((name) => newActions = newActions.set(name, new Action()))
+    this._actions = newActions.merge(this._actions)
+    return this._actions.toObject()
   }
 
   createStores (storeMap) {
@@ -24,20 +31,13 @@ class Core {
 
       this._updateState(key, initStore.getInitialState())
 
-      initStore.subscribe((updatedState) => {
+      initStore.observable.subscribe((updatedState) => {
         this._updateState(key, updatedState)
         initStore.didUpdate(this.get(key))
       })
     })
 
     this._stores = this._stores.merge(newStores)
-  }
-
-  createActions (...actionNames) {
-    let newActions = Im.Map({})
-    actionNames.forEach((name) => newActions = newActions.set(name, new Action()))
-    this._actions = newActions.merge(this._actions)
-    return this._actions.toObject()
   }
 
   get actions () {
@@ -92,5 +92,3 @@ class Core {
     this._state = this._state.set(name, Im.fromJS(data))
   }
 }
-
-module.exports = Core
