@@ -44,8 +44,6 @@ export default class Store {
     return this.observable.subscribe((updatedState) => callback({ [this._key]: updatedState }))
   }
 
-  didUpdate (currentState) {}
-
   replaceState (state) {
     this._input.onNext(state)
   }

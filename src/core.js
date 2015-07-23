@@ -30,10 +30,7 @@ export default class Core {
 
       this._updateState(key, initStore.getInitialState())
 
-      initStore.observable.subscribe((updatedState) => {
-        this._updateState(key, updatedState)
-        initStore.didUpdate(this.get(key))
-      })
+      initStore.observable.subscribe((updatedState) => this._updateState(key, updatedState))
     })
 
     this._stores = this._stores.merge(newStores)
