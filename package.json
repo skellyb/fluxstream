@@ -1,6 +1,6 @@
 {
   "name": "fluxstream",
-  "version": "1.4.1",
+  "version": "2.0.0",
   "description": "A lightweight Flux implementation that controls app state using RxJS and ImmutableJS.",
   "author": "Shawn Kelly",
   "homepage": "https://github.com/skellyb/fluxstream",
