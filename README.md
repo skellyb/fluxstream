@@ -1,8 +1,8 @@
 # Fluxstream
-A lightweight [Flux](http://facebook.github.io/flux/) approach that controls data flow around your app. It pairs well with [React.js](http://facebook.github.io/react/) but doesn't require it. Under the hood [RxJS](https://github.com/reactive-extensions/RxJS) handles the async events and [Immutable](http://facebook.github.io/immutable-js/) handles the data.
+A lightweight [Flux](http://facebook.github.io/flux/) implementation that controls app state using [RxJS](https://github.com/reactive-extensions/RxJS) and [Immutable](http://facebook.github.io/immutable-js/). It pairs well with [React.js](http://facebook.github.io/react/) but doesn't require it.
 
-## 2.0 Overhaul
-This version is a complete rewrite. Everything revolves around a central core that’s easy to pass around your app without using singletons. Stores have shifted conceptually to be more like a React component. Use them to define the shape of your state data and how it should mutate when specific actions are called. The centralized state object also makes it easy to save and restore your application’s state.
+## 2.0 — Complete Overhaul
+Everything now revolves around a central core that's easy to pass around your app. Stores define the shape of your application state and how it should mutate when specific actions are called. With centralized, immutable data it's easy to save and restore your application's state at any point in time.
 
 ---
 
@@ -55,8 +55,8 @@ Listen for store changes.
 *The result is wrapped in the store's object, making it easy to plug into React.Component.setState().*
 ```
 core.stores.car.onUpdate((state) => console.log(state))
-core.actions.drive('faster')
-> { car: { direction: 'faster' } }
+core.actions.drive('reverse')
+> { car: { direction: 'reverse' } }
 ```
 
 ---
@@ -64,7 +64,7 @@ core.actions.drive('faster')
 ### API
 
 #### Core
-Once you create the core of your app, most of your interactions with state will happen here. It's easy to pass around your application giving you centralized access to your actions, stores and data.
+Once you create the core of your app, all of your interactions with state will happen here. It's easy to pass around your application giving you access to your actions, stores and data.
 
 ##### Core([config])
 Initialize one instance of core for your app. Optionally, you can pass in store definitions and action names.
@@ -105,7 +105,7 @@ core.actions.drive.subscribe((payload) => console.log('Go ' + payload.direction)
 ##### Core.stores
 Directly access stores.
 ```
-core.stores.car.onUpdate((state) => console.log('Car status: ' + state))
+core.stores.car.onUpdate((state) => console.log('Car store: ' + state))
 ```
 
 ##### Core.get()
@@ -194,7 +194,10 @@ class CarStore extends Store {
 ```
 
 ##### Store.onUpdate(callback)
-Listen for store data changes by passing in a callback.
+Listen for store data changes by passing in a callback. That function then receives the store's updated scoped data, making it easy to pass the results into a component's `setState` method.
+```
+core.stores.car.onUpdate(this.setState)
+```
 
 ##### Store.replaceState(state)
 Method used by `Core.restore()`. Can be used to force data directly into a store.
@@ -204,13 +207,13 @@ Access [RxJS observable](https://github.com/Reactive-Extensions/RxJS/blob/master
 
 
 #### Actions
-Generally, you shouldn't need to interact with actions directly. Just give them a name via Core.createActions() and call them via the Core.actions accessor, passing data payloads into the action’s function. If you had an action named 'go', you'd call it like so `core.actions.go('time')`. If you want to receive action events outside of your stores, you can subscribe to them or tap directly into the RxJS observable.
+Generally, you shouldn't need to interact with actions directly. Just give them a name via Core.createActions() and call them via the `Core.actions` accessor, passing data payloads into the action's function. If you had an action named 'go', you'd call it like so `core.actions.go('time')`. If you want to receive action events outside of your stores, you can subscribe to them or tap directly into the RxJS observable.
 
 ##### Action.subscribe(handler)
 Pass in a callback to handle each action call. The handler should accept one payload argument.
 
 ##### Action.once(handler)
-Same as `subscribe`, except it will unsubscribe from the action’s observable stream.
+Same as `subscribe`, except it will unsubscribe from the action's observable stream.
 
 ##### Action.observable
-Access the action’s RxJS observable stream directly.
+Access the action's RxJS observable stream directly.
