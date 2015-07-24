@@ -1,327 +1,219 @@
 # Fluxstream
-A lightweight Flux solution that controls data flow around your app using [Bacon.js](http://baconjs.github.io) EventStreams. It pairs well with [React.js](http://facebook.github.io/react/) but doesn't require it. Most of the smart thinking is from Facebook's [Flux](https://facebook.github.io/flux/), and more specifically, [RefluxJS](https://github.com/spoike/refluxjs), where this approach is simplified by giving each action its own dispatcher. A brilliant way to streamline Flux. All I’ve done is implement that idea using Bacon.js, making it easier for me to use that functional reactive programming library elsewhere in my application.
+A lightweight [Flux](http://facebook.github.io/flux/) implementation that controls app state using [RxJS](https://github.com/reactive-extensions/RxJS) and [Immutable](http://facebook.github.io/immutable-js/). It pairs well with [React.js](http://facebook.github.io/react/) but doesn't require it.
 
-You don't have to use Bacon.js anywhere else in your app, but if you want to, it's easy take these EventStreams and manipulate them at your leisure.
+## 2.0 — Complete Overhaul
+Everything now revolves around a central core that's easy to pass around your app. Stores define the shape of your application state and how it should mutate when specific actions are called. With centralized, immutable data it's easy to save and restore your application's state at any point in time.
 
+---
 
-## Installation
+### Installation
 ```
 npm install fluxstream
 ```
 
+### Usage
+First, you create the core of your application. 
+```
+import { Core } from 'fluxstream'
 
-## Usage
-### Create an action
-The action factory returns a function you call elsewhere in your app to dispatch an event.
-```
-var flux = require('fluxstream');
-var appAction = flux.createAction();
-```
-#### Create several actions at once
-This returns an object with action names for keys and action functions for values.
-```
-var actions = flux.createActions(['doSomething', 'doSomethingElse']);
+const core = new Core()
 ```
 
-### Dispatch an event
-Just call the action function, passing in an object if you want to include a payload.
+Then add an action.
 ```
-appAction();
-actions.doSomethingElse('with this');
-```
-#### Run code or validate the payload before the action fires the event
-Provide a function when you create the action. Return false if you want to cancel the action and throw a validation error.
-```
-var anotherAction = flux.createAction(function(payload) {
-    return (payload === 'Valid Value');
-});
+core.createActions('drive')
 ```
 
-### Listen to actions
-Each action contains its own dispatcher, so just listen to the action for events.
+Define a store and add it to the core
 ```
-appActions.listen(function(payload) {
-   // handle event 
-});
-```
-#### Watch for errors
-```
-appActions.errors(function(err) {
-   // handle error
-});
-```
+import { Store } from 'fluxstream'
 
-### Create a store
-In its most basic form you can create a store that doesn't do much. The factory returns an instantiated store object, so it's an easy make this a singleton if using this with something like [Browserify](http://browserify.org).
-```
-module.exports = flux.createStore();
-```
-
-#### Alternatively, create a store object that can be instantiated later.
-This can be useful if you need your stores to run on the server, where objects cached by `require()` statements can be a problem.
-```
-var MyStore = flux.defineStore();
-var storeInstance = new MyStore();
-```
-
-#### Configure your store
-Usually, you'd want to pass in a definition to give the store something to do. An _init_ function will run when you create the store, and a special config object will setup streaming properties based on action events.
-```
-var store = flux.createStore({
-    init: function() {
-        // runs store when store created and configured
-    },
-
-    config: {
-        // this property name will be used to listen for  changes
-        propName: {
-            // the action events and payloads that populate this property
-            action: appAction,
-
-            // (optional) transform the event payloads
-            map: callback,
-
-            // (optional) use this if you want return a new Bacon EventStream for each payload
-            asyncMap: callback,
-
-            // (optional) provide an initial value for property
-            init: {},
-
-            // (optional) action that fetches data for this property
-            inputAction: appAction,
-
-            // input action handler where often a fetch would be made 
-            // and the results delivered to this props main action
-            inputHandler: func,
-
-            // These values are used for caching inputs
-            // inputKey is property path to identifier for a cached result,
-            // i.e. 'id' would you 'object-id' as the key { id: 'object-id' }
-            // supports dot notation and array indices, such as 'results.children.0'
-            // view the property-path npm module for more details
-            // If left undefined, the action payload is the key
-            inputKey: 'string',
-
-            // cacheKey points to the value in the property data that defines its cache ID
-            cacheKey: 'string',
-
-            // limit number of items that can accumulate in cache, defaults to 100
-            cacheLimit: 100,
-        }
+class CarStore extend Store {
+  update () {
+    return {
+      drive: (core, payload, state) => { 
+        state.direction = payload
+        return state
+      }
     }
-});
-```
-
-
-#### Respond to changes
-You can either listen to changes to all the changes in a store, or single property in the `streams` object setup in configuration.
-```
-store.listen(function(payload) {
-    // handle all events
-});
-
-store.streams.propName.listen(function(payload) {
-    // get current value and all future values
-});
-```
-
-## A barebones example
-```
-var React = require('react');
-var flux = require('fluxstream');
-
-var flipSwitch = flux.createAction();
-
-var store = flux.createStore({
-    config: {
-        switchState: {
-            action: flipSwitch,
-            map: function (val) {
-                return { isOn: !val.isOn }
-            },
-            init: { isOn: false }
-        }
-    }
-});
-
-var Light = React.createClass({
-    componentDidMount: function() {
-        this.props.store.streams.switchState.listen(this.setState.bind(this));
-    },
-
-    render: function() {
-        return <div onClick={ flipSwitch } >Light is { (this.state.isOn) ? 'on' : 'off' }</div>;
-    }
-});
-
-React.render(
-    <Light store={ store } />,
-    document.getElementById('app')
-);
-
-```
-
-# API
-
-## Actions
-
-### fluxstream.createAction(validate)
-
-Create a Flux action with self-contained dispatcher. Just call the returned function with an optional payload to dispatch an event.
-
-**Parameters**
-
-**validate**: `function`, An optional function that will be called before theevent is dispatched. If it returns false an error is sent instead.
-
-**Returns**: `function`, Action function
-
-
-### fluxstream.createActions(actionNames) 
-
-Shortcut to create multiple actions.
-
-**Parameters**
-
-**actionNames**: `Array`, A list of strings that will define action names.
-
-**Returns**: `Object`, An object with names for keys and action functions for values.
-
-
-### action.listen(callback) 
-
-Provide a callback for every event that goes through this Action.
-
-**Parameters**
-
-**callback**: `function`, Event callback will receive whatever payload was dispatched through this action.
-
-**Returns**: `function`, Unsubscribe function
-
-
-### action.listenOnce(callback) 
-
-Same as listen, but it unsubscribes itself after first event.
-
-**Parameters**
-
-**callback**: `function`, Event callback will receive whatever payload was dispatched through this action.
-
-**Returns**: `function`, Unsubscribe function
-
-
-### action.errors(callback) 
-
-Listen for errors in this action's EventStream
-
-**Parameters**
-
-**callback**: `function`, Handle error
-
-**Returns**: `function`, Unsubscribe function
-
-
-### action.stream
-
-Access Bacon.js EventStream for this action.
-
-
-* * *
-
-## Store
-
-### fluxstream.createStore(definition) 
-
-Create a Flux store that exposes Bacon.js properties based off of action EventStreams. Also allows you to combine streams, making it easy to deal with async dependencies.
-
-**Parameters**
-
-**definition**: `Object`, Extend the store with optional init and config plus any custom functions or properties you might want.
-
-**Returns**: `Object`, Instantiated store.
-
-
-### fluxstream.defineStore(definition) 
-
-Create a Flux store that exposes Bacon.js properties based off of action EventStreams. Also allows you to combine streams, making it easy to deal with async dependencies.
-
-**Parameters**
-
-**definition**: `Object`, Extend the store with optional init and config plus any custom functions or properties you might want.
-
-**Returns**: `Object`, Store constructor that accepts and options object accessible in the definition's init function.
-
-
-### store.configure(config) 
-
-Configure this store's reactive properties. Ideally, pass a config object into the createStore definition, and the store will call this on instantiation.
-
-**Parameters**
-
-**config**: `Object`, keys define the property names, and the object vals need to define an action. Optionally, a map function for transforming the action payload or init for initial property value. Optionally, config can be a function that return a config object.
-
-**Returns**: `EventStream`, A stream of all the property streams created.
-
-The config object should look something like this:
-{ 
-  propName: {
-     action: action,
-     map: callback,
-     asyncMap: callback,
-     init: {},
-     inputAction: action,
-     inputHandler: func,
-     inputKey: 'string',
-     cacheKey: 'string',
-     cacheLimit: 100
   }
 }
 
+core.createStore({
+  car: CarStore
+})
+```
 
-### store.listen(callback) 
+You're all setup. Now the `drive` action can be used to change the state of the car store.
+```
+core.actions.drive('forward')
+core.get('car')
+> { direction: 'forward' }
+```
 
-Provide a callback for every event that goes through the store's properites.
+Listen for store changes. 
+*The result is wrapped in the store's object, making it easy to plug into React.Component.setState().*
+```
+core.stores.car.onUpdate((state) => console.log(state))
+core.actions.drive('reverse')
+> { car: { direction: 'reverse' } }
+```
 
-**Parameters**
+---
 
-**callback**: `function`, Event callback will receive whatever payloadwas dispatched through the actions.
+### API
 
-**Returns**: `function`, Unsubscribe function
+#### Core
+Once you create the core of your app, all of your interactions with state will happen here. It's easy to pass around your application giving you access to your actions, stores and data.
+
+##### Core([config])
+Initialize one instance of core for your app. Optionally, you can pass in store definitions and action names.
+```
+const core = new Core({
+  stores: {
+    car: CarStore
+  },
+  actions: ['drive']
+})
+```
+
+##### Core.createActions(...names)
+Pass in unique names as strings. You need to create actions before stores can use them.
+```
+core.createActions('drive', 'stop', 'openTrunk')
+```
+
+##### Core.createStores(stores)
+Stores need a name and a class definition.
+```
+core.createStores({
+  car: CarStore,
+  track: TrackStore
+})
+```
+
+##### Core.actions
+Access all of your actions directly.
+```
+// call with a data payload
+core.actions.drive({ direction: 'forward' })
+
+// listen for activity
+core.actions.drive.subscribe((payload) => console.log('Go ' + payload.direction))
+```
+
+##### Core.stores
+Directly access stores.
+```
+core.stores.car.onUpdate((state) => console.log('Car store: ' + state))
+```
+
+##### Core.get()
+Retrieve current state by store key. Pass in a string for the entire store branch of data, or narrow down by passing an array key path.
+```
+core.get('car')
+core.get(['car', 'engineType'])
+```
+
+##### Core.combineStores(...names)
+Get an Rx.Observable from multiple stores. If *any* of the stores changes you'll recieve all the current values in the same order you pass them into this function
+```
+core.combineStores('car', 'train')
+  .subscribe((values) => console.log('Car: ' + values[0], 'Train: ' + values[1]))
+```
+
+##### Core.waitForStores(...names)
+This creates an Rx.Observable that only fires when *all* of the listed stores
+have updated.
+```
+core.waitForStores('car', 'train')
+  .subscribe((values) => console.log('Car: ' + values[0], 'Train: ' + values[1]))
+```
+
+##### Core.waitForActions(...names)
+This creates an Rx.Observable that only fires when *all* of the listed actions have updated.
+```
+core.waitForActions('drive', 'accelerate')
+  .subscribe((payloads) => console.log('Drive: ' + payloads[0], 'Accelerate: ' + payloads[1]))
+```
+
+##### Core.takeSnapshot()
+Returns an object representing current state across all stores.
+
+##### Core.restore(state)
+Restore state across all stores by passing in entire state object.
+
+---
+
+#### Stores
+Stores define how branches of data are shaped and how they change over time. Like a React.Component you define what happens through the lifecycle of an event by overriding class methods. Instead of initializing these stores directly, you'll then pass your class definitions into Core.createStores().
+
+##### Store.getInitialState()
+By default returns an empty object, override method to define default state.
+```
+class CarStore extends Store {
+  getInitialState () {
+    return { transmission: 'auto' }
+  }
+}
+```
+
+##### Store.update()
+This is the most important part of a store definition — declare how state changes over time. Override `update` method to return mutators that are associated with action names for keys. Whenever that action is called the returned value will be the new immutable object held by the store.
+
+```
+class CarStore extends Store {
+  update () {
+    return {
+      drive: (core, payload, state) => {
+       let car = state
+       car.speed = payload
+       return car
+      }
+    }
+  }
+}
+```
+
+##### Store.shouldUpdate(updatingState, currentState)
+Override this method to validate state updates. Return false to prevent change.
+
+##### Store.handle()
+Sometimes a store needs to work with actions that don't mutate state. It's a great spot to deal with server interaction.
+
+```
+class CarStore extends Store {
+  handle () {
+    return {
+      getRoute: (core, payload, state) => {
+        xhr('/routes/0', (route) => core.actions.receiveRoute(route))
+      }
+    }
+  }
+}
+```
+
+##### Store.onUpdate(callback)
+Listen for store data changes by passing in a callback. That function then receives the store's updated scoped data, making it easy to pass the results into a component's `setState` method.
+```
+core.stores.car.onUpdate(this.setState)
+```
+
+##### Store.replaceState(state)
+Method used by `Core.restore()`. Can be used to force data directly into a store.
+
+##### Store.observable
+Access [RxJS observable](https://github.com/Reactive-Extensions/RxJS/blob/master/doc/api/core/observable.md) directly.
 
 
-### store.combine(streams, callback) 
+#### Actions
+Generally, you shouldn't need to interact with actions directly. Just give them a name via Core.createActions() and call them via the `Core.actions` accessor, passing data payloads into the action's function. If you had an action named 'go', you'd call it like so `core.actions.go('time')`. If you want to receive action events outside of your stores, you can subscribe to them or tap directly into the RxJS observable.
 
-Combine EventStreams and capture event payloads in grouped arrays, making multiple async events easier to deal with. Pass in an array of store streams you want to listen to, and the callback will receive an array with each payload in order once all the combined streams have fired an event.
+##### Action.subscribe(handler)
+Pass in a callback to handle each action call. The handler should accept one payload argument.
 
-_Note:_ This behaviour differs from Bacon's combine functions, this uses zipAsArray under the hood.
+##### Action.once(handler)
+Same as `subscribe`, except it will unsubscribe from the action's observable stream.
 
-**Parameters**
-
-**streams**: `Array`, An array of EventStreams.
-
-**callback**: `function`, Handles combined events. An array is passed in with all the payloads in order.
-
-**Returns**: `function`, Unsubscribe function
-
-
-### combineOnce(streams, callback) 
-
-Same as combine, just it unsubscribes itself after first combined event fires.
-
-**Parameters**
-
-**streams**: `Array`, An array of EventStreams.
-
-**callback**: `function`, Handles combined events. An array is passed in with the first batch of event payloads.
-
-**Returns**: `function`, Unsubscribe function
-
-
-### store.errors(callback) 
-
-Listen for errors in all of the store's event streams.
-
-**Parameters**
-
-**callback**: `function`, Handle error
-
-**Returns**: `function`, Unsubscribe function
+##### Action.observable
+Access the action's RxJS observable stream directly.
