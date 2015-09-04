@@ -2,6 +2,7 @@
 I've been using [Redux](https://github.com/rackt/redux/), and it's pretty great. It achieves what I was trying to accomplish with a better solution. I also see a solid ecosystem growing around it.
 
 If you're using Fluxstream now and run into issues, let me know, I'd be happy to help. Otherwise, I'd recommend giving Redux a try.
+
 ---
 # Fluxstream
 A lightweight [Flux](http://facebook.github.io/flux/) implementation that controls app state using [RxJS](https://github.com/reactive-extensions/RxJS) and [Immutable](http://facebook.github.io/immutable-js/). It pairs well with [React.js](http://facebook.github.io/react/) but doesn't require it.
